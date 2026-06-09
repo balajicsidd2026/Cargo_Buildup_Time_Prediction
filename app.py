@@ -661,7 +661,7 @@ with tab3:
 
         try:
             # 1. Drop training-excluded columns
-            drop_train = ["Date", "Flight_ID", "Build_Up_Time_Minutes"]
+            drop_train = ["Date", "Flight_ID"]
             bulk_input = test_data.copy()
             bulk_raw   = test_data.copy()
 
