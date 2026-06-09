@@ -57,7 +57,7 @@ try:
     model, feature_columns, label_encoders = load_artifacts()
     dataset, test_data = load_data()
 except FileNotFoundError as e:
-    st.error(f"⚠️ Required file not found: {e}")
+    st.error(f"Required file not found: {e}")
     st.stop()
 
 # ─────────────────────────────────────────────
@@ -221,7 +221,7 @@ with tab1:
 
     # ── LEFT: Shipment Information ────────────────────────
     with left_col:
-        st.markdown("**✈️ Shipment Information**")
+        st.markdown("**Shipment Information**")
 
         st.text_input(
             "Date",
@@ -262,7 +262,7 @@ with tab1:
 
     # ── RIGHT: Operations Information ─────────────────────
     with right_col:
-        st.markdown("**🏭 Operations Information**")
+        st.markdown("**Operations Information**")
 
 
 
@@ -308,7 +308,7 @@ with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── Predict Button ────────────────────────────────────
-    if st.button("🔮 Predict Build-Up Time", key="predict_single"):
+    if st.button("Predict Build-Up Time", key="predict_single"):
 
         try:
             # 1. Build input dataframe from the selected row
@@ -343,13 +343,13 @@ with tab1:
 
             # 6. Risk classification
             if prediction <= 60:
-                risk_label = "🟢 Low Processing Time"
+                risk_label = "Low Processing Time"
                 card_class = "pred-card-green"
             elif prediction <= 120:
-                risk_label = "🟡 Medium Processing Time"
+                risk_label = "Medium Processing Time"
                 card_class = "pred-card-yellow"
             else:
-                risk_label = "🔴 High Processing Time"
+                risk_label = "High Processing Time"
                 card_class = "pred-card-red"
 
             # ── Display Results ───────────────────────────
@@ -366,7 +366,7 @@ with tab1:
                     <div class='pred-value'>{prediction:.0f}
                         <span style='font-size:22px; font-weight:400;'>Minutes</span>
                     </div>
-                    <div class='pred-sub'>⏱ {hrs} Hours {mins:02d} Minutes</div>
+                    <div class='pred-sub'> {hrs} Hours {mins:02d} Minutes</div>
                     <div class='pred-risk'>{risk_label}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -657,7 +657,7 @@ with tab3:
         unsafe_allow_html=True
     )
 
-    if st.button("🚀 Run Bulk Prediction", key="bulk_predict"):
+    if st.button("Run Bulk Prediction", key="bulk_predict"):
 
         try:
             # 1. Drop training-excluded columns
@@ -698,7 +698,7 @@ with tab3:
             results["Risk_Category"] = results["Predicted_Build_Up_Time"].apply(classify_risk)
 
             st.session_state["bulk_results"] = results
-            st.success(f"✅ Bulk prediction completed for {len(results):,} flights.")
+            st.success(f"Bulk prediction completed for {len(results):,} flights.")
 
         except Exception as e:
             st.error(f"Bulk prediction failed: {e}")
