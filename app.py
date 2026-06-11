@@ -370,7 +370,7 @@ with tab1:
                     <div class='pred-value'>{prediction:.0f}
                         <span style='font-size:22px; font-weight:400;'>Minutes</span>
                     </div>
-                    <div class='pred-sub'>⏱ {hrs} Hours {mins:02d} Minutes</div>
+                    <div class='pred-sub'> {hrs} Hours {mins:02d} Minutes</div>
                     <div class='pred-risk'>{risk_label}</div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -895,7 +895,7 @@ with tab4:
         unsafe_allow_html=True
     )
 
-    if st.button("🚀 Run Bulk Prediction", key="bulk_predict"):
+    if st.button("Run Bulk Prediction", key="bulk_predict"):
 
         try:
             # 1. Drop training-excluded columns
@@ -936,7 +936,7 @@ with tab4:
             results["Risk_Category"] = results["Predicted_Build_Up_Time"].apply(classify_risk)
 
             st.session_state["bulk_results"] = results
-            st.success(f"✅ Bulk prediction completed for {len(results):,} flights.")
+            st.success(f"Bulk prediction completed for {len(results):,} flights.")
 
         except Exception as e:
             st.error(f"Bulk prediction failed: {e}")
