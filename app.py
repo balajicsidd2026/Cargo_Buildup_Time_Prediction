@@ -23,8 +23,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
+import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 
 # ─────────────────────────────────────────────
 # PAGE CONFIG
@@ -57,7 +60,7 @@ try:
     model, feature_columns, label_encoders = load_artifacts()
     dataset, test_data = load_data()
 except FileNotFoundError as e:
-    st.error(f"⚠️ Required file not found: {e}")
+    st.error(f"Required file not found: {e}")
     st.stop()
 
 # ─────────────────────────────────────────────
@@ -189,8 +192,9 @@ st.divider()
 # TABS
 # ─────────────────────────────────────────────
 
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3,tab4 = st.tabs([
     "Build-Up Time Prediction",
+    "EDA",
     "Analytics Dashboard",
     "Bulk Build-Up Time Analysis"
 ])
@@ -221,7 +225,7 @@ with tab1:
 
     # ── LEFT: Shipment Information ────────────────────────
     with left_col:
-        st.markdown("**✈️ Shipment Information**")
+        st.markdown("**Shipment Information**")
 
         st.text_input(
             "Date",
@@ -262,7 +266,7 @@ with tab1:
 
     # ── RIGHT: Operations Information ─────────────────────
     with right_col:
-        st.markdown("**🏭 Operations Information**")
+        st.markdown("**Operations Information**")
 
 
 
@@ -308,7 +312,7 @@ with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── Predict Button ────────────────────────────────────
-    if st.button("🔮 Predict Build-Up Time", key="predict_single"):
+    if st.button("Predict Build-Up Time", key="predict_single"):
 
         try:
             # 1. Build input dataframe from the selected row
@@ -343,13 +347,13 @@ with tab1:
 
             # 6. Risk classification
             if prediction <= 60:
-                risk_label = "🟢 Low Processing Time"
+                risk_label = "Low Processing Time"
                 card_class = "pred-card-green"
             elif prediction <= 120:
-                risk_label = "🟡 Medium Processing Time"
+                risk_label = "Medium Processing Time"
                 card_class = "pred-card-yellow"
             else:
-                risk_label = "🔴 High Processing Time"
+                risk_label = "High Processing Time"
                 card_class = "pred-card-red"
 
             # ── Display Results ───────────────────────────
@@ -410,12 +414,246 @@ with tab1:
         except Exception as e:
             st.error(f"Prediction failed: {e}")
 
-
-# ═══════════════════════════════════════════════════════════
-# TAB 2 — ANALYTICS DASHBOARD
-# ═══════════════════════════════════════════════════════════
-
 with tab2:
+    left_chart, right_chart = st.columns(2)
+    with left_chart:
+        st.markdown(
+            "<div class='section-header'>1. Build-Up Time Distribution</div>",
+            unsafe_allow_html=True
+        )
+
+        fig, ax = plt.subplots(figsize=(12,6))
+
+        sns.histplot(
+            dataset["Build_Up_Time_Minutes"],
+            bins=30,
+            kde=True,
+            ax=ax
+        )
+
+        ax.set_title(
+            "Distribution of Build-Up Time"
+        )
+
+        ax.set_xlabel(
+            "Build-Up Time (Minutes)"
+        )
+
+        ax.set_ylabel(
+            "Frequency"
+        )
+
+        st.pyplot(fig)
+
+        
+    with right_chart:
+        st.markdown(
+            "<div class='section-header'>2. Season Impact on Build-Up Time</div>",
+            unsafe_allow_html=True
+        )
+
+        season_data = (
+            dataset
+            .groupby("Season")["Build_Up_Time_Minutes"]
+            .mean()
+            .reset_index()
+        )
+
+        season_data = season_data.sort_values(
+            "Build_Up_Time_Minutes",
+            ascending=False
+        )
+
+        fig = px.bar(
+            season_data,
+            x="Season",
+            y="Build_Up_Time_Minutes",
+            text_auto=".1f",
+            color="Build_Up_Time_Minutes",
+            color_continuous_scale="Blues",
+        )
+
+        fig.update_layout(
+            template="plotly_white",
+            height=350,
+            coloraxis_showscale=False,
+            xaxis_title="Season",
+            yaxis_title="Average Build-Up Time (Minutes)"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+        
+            
+    st.markdown(
+        "<div class='section-header'>3. Skewness Handling Analysis</div>",
+        unsafe_allow_html=True
+    )
+    # Create transformed columns
+
+    dataset["Cargo_Weight_KG_log"] = np.log1p(
+        dataset["Cargo_Weight_KG"]
+    )
+
+    dataset["Cargo_Volume_CBM_log"] = np.log1p(
+        dataset["Cargo_Volume_CBM"]
+    )
+
+    dataset["ULD_Count_log"] = np.log1p(
+        dataset["ULD_Count"]
+    )
+
+    dataset["Pallet_Count_log"] = np.log1p(
+        dataset["Pallet_Count"]
+    )
+    
+    features = [
+        "Cargo_Weight_KG",
+        "Cargo_Volume_CBM",
+        "ULD_Count",
+        "Pallet_Count",
+    ]
+
+    for feature in features:
+
+        st.markdown(
+            f"### {feature}"
+        )
+
+        col1, col2 = st.columns(2)
+
+        # Before Transformation
+
+        with col1:
+
+            st.markdown("#### Before Transformation")
+
+            fig, ax = plt.subplots(
+                figsize=(6,4)
+            )
+
+            sns.histplot(
+                dataset[feature],
+                kde=True,
+                ax=ax
+            )
+
+            ax.set_title(
+                f"Original {feature}"
+            )
+
+            st.pyplot(fig)
+
+            st.metric(
+                "Skewness",
+                round(
+                    dataset[feature].skew(),
+                    2
+                )
+            )
+
+        # After Transformation
+
+        with col2:
+
+            st.markdown("#### After Log Transformation")
+
+            fig, ax = plt.subplots(
+                figsize=(6,4)
+            )
+
+            sns.histplot(
+                dataset[f"{feature}_log"],
+                kde=True,
+                ax=ax
+            )
+
+            ax.set_title(
+                f"Log Transformed {feature}"
+            )
+
+            st.pyplot(fig)
+
+            st.metric(
+                "Skewness",
+                round(
+                    dataset[f"{feature}_log"].skew(),
+                    2
+                )
+            )
+
+        st.markdown("---")
+        
+    st.markdown(
+        "<div class='section-header'>4. Categorical Feature Analysis</div>",
+        unsafe_allow_html=True
+    )
+
+    categorical_cols = [
+        "Season",
+        "Flight_Type",
+        "Aircraft_Type",
+        "ULD_Type",
+        "Nature_of_Goods",
+        "Equipment_Availability",
+        "Shift",
+        "Weather_Condition"
+    ]
+
+    # Process 3 charts at a time
+    for i in range(0, len(categorical_cols), 3):
+
+        cols = st.columns(3)
+
+        for j in range(3):
+
+            if i + j < len(categorical_cols):
+
+                feature = categorical_cols[i + j]
+
+                with cols[j]:
+
+                    st.markdown(
+                        f"#### {feature.replace('_',' ')}"
+                    )
+
+                    fig, ax = plt.subplots(
+                        figsize=(8,5)
+                    )
+
+                    sns.countplot(
+                        data=dataset,
+                        x=feature,
+                        ax=ax
+                    )
+                    for container in ax.containers:
+                        ax.bar_label(
+                            container,
+                            fmt='%d',
+                            fontsize=9,
+                            fontweight='bold',
+                            padding=3
+                        )
+
+                    ax.set_xlabel("")
+                    ax.set_ylabel("Count")
+
+                    plt.xticks(
+                        rotation=45,
+                        ha="right"
+                    )
+
+                    plt.tight_layout()
+
+                    st.pyplot(fig)
+
+# ═══════════════════════════════════════════════════════════
+# TAB 3 — ANALYTICS DASHBOARD
+# ═══════════════════════════════════════════════════════════
+
+with tab3:
 
     st.markdown(
         "<div class='section-header'>Executive Dashboard</div>",
@@ -647,10 +885,10 @@ with tab2:
         st.plotly_chart(fig5, use_container_width=True, config={"displayModeBar": False})
 
 # ═══════════════════════════════════════════════════════════
-# TAB 3 — BULK BUILD-UP TIME ANALYSIS
+# TAB 4 — BULK BUILD-UP TIME ANALYSIS
 # ═══════════════════════════════════════════════════════════
 
-with tab3:
+with tab4:
 
     st.markdown(
         "<div class='section-header'>Bulk Build-Up Time Analysis</div>",
@@ -661,7 +899,7 @@ with tab3:
 
         try:
             # 1. Drop training-excluded columns
-            drop_train = ["Date", "Flight_ID", "Build_Up_Time_Minutes"]
+            drop_train = ["Date", "Flight_ID"]
             bulk_input = test_data.copy()
             bulk_raw   = test_data.copy()
 

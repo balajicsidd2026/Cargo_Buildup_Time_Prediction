@@ -1,8 +1,3 @@
-# Generated from: code.ipynb
-# Converted at: 2026-06-08T09:00:52.528Z
-# Next step (optional): refactor into modules & generate tests with RunCell
-# Quick start: pip install runcell
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -96,39 +91,157 @@ plt.ylabel('Build-Up Time (Minutes)')
 
 plt.show()
 
-# 4.3 ULD Type vs Build-Up Time
+# 4.3 Distribution for Important Feature
 
 
-plt.figure(figsize=(12,6))
+features = [
+    "Shipment_Count",
+    "Cargo_Weight_KG",
+    "Cargo_Volume_CBM",
+    "ULD_Count",
+    "Pallet_Count",
+    "Manpower_Assigned",
+    "Forklift_Count"
+]
 
-sns.barplot(
-    data=dataset,
-    x='ULD_Type',
-    y='Build_Up_Time_Minutes'
+n_cols = 4
+n_rows = (len(features) + n_cols - 1) // n_cols
+
+fig, axes = plt.subplots(
+    n_rows,
+    n_cols,
+    figsize=(11, n_rows * 4)
 )
 
-plt.title('ULD Type vs Build-Up Time')
-plt.xticks(rotation=45)
+axes = axes.flatten()
+for i, feature in enumerate(features):
+    sns.histplot(
+        dataset[feature],
+        bins=25,
+        kde=True,
+        ax=axes[i]
+    )
+    axes[i].set_title(
+        f"Distribution of {feature}"
+    )
+    axes[i].set_xlabel(
+        feature
+    )
+    axes[i].set_ylabel(
+        "Count"
+    )
+
+# Hide unused plots
+for j in range(len(features), len(axes)):
+    axes[j].axis("off")
+
+plt.tight_layout()
 
 plt.show() 
 
-# 4.4 Cargo Category vs Build-Up Time
+# 4.4 Handling Sweked Data
 
-
-plt.figure(figsize=(12,6))
-
-sns.barplot(
-    data=dataset,
-    x='Nature_of_Goods',
-    y='Build_Up_Time_Minutes'
+dataset["Cargo_Weight_KG"] = np.log1p(
+    dataset["Cargo_Weight_KG"]
 )
 
-plt.title('Cargo Category vs Build-Up Time')
-plt.xticks(rotation=45)
+dataset["Cargo_Volume_CBM"] = np.log1p(
+    dataset["Cargo_Volume_CBM"]
+)
 
+dataset["ULD_Count"] = np.log1p(
+    dataset["ULD_Count"]
+)
+
+dataset["Pallet_Count"] = np.log1p(
+    dataset["Pallet_Count"]
+)
+
+fig, axes = plt.subplots(
+    4,
+    2,
+    figsize=(14,16)
+)
+
+features = [
+    "Cargo_Weight_KG",
+    "Cargo_Volume_CBM",
+    "ULD_Count",
+    "Pallet_Count",    
+]
+
+for i, feature in enumerate(features):
+
+    sns.histplot(
+        dataset[feature],
+        kde=True,
+        ax=axes[i,0]
+    )
+
+    axes[i,0].set_title(
+        f"Original {feature}"
+    )
+
+    sns.histplot(
+        dataset[feature],
+        kde=True,
+        ax=axes[i,1]
+    )
+
+    axes[i,1].set_title(
+        f"Log Transformed {feature}"
+    )
+
+plt.tight_layout()
 plt.show()
 
-dataset.columns
+#4.5 Distribution for Categorical Column
+categorical_cols = [
+    "Season",
+    "Flight_Type",
+    "Aircraft_Type",
+    "ULD_Type",
+    "Nature_of_Goods",
+    "Cargo_Mix_Complexity",
+    "Equipment_Availability",
+    "Shift",
+    "Weather_Condition"
+]
+
+n_cols = 2
+n_rows = (len(categorical_cols) + n_cols - 1) // n_cols
+
+fig, axes = plt.subplots(
+    n_rows,
+    n_cols,
+    figsize=(16, n_rows * 5)
+)
+
+axes = axes.flatten()
+
+for i, col in enumerate(categorical_cols):
+
+    sns.countplot(
+        data=dataset,
+        x=col,
+        ax=axes[i]
+    )
+
+    axes[i].set_title(
+        f"Distribution of {col}"
+    )
+
+    axes[i].tick_params(
+        axis='x',
+        rotation=45
+    )
+
+# Hide empty plots
+for j in range(i + 1, len(axes)):
+    axes[j].axis("off")
+
+plt.tight_layout()
+plt.show()
 
 # **5. Feature Engineering**
 
