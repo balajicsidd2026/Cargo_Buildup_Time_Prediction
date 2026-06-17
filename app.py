@@ -346,10 +346,10 @@ with tab1:
             mins = int(prediction  % 60)
 
             # 6. Risk classification
-            if prediction <= 60:
+            if prediction <= 200:
                 risk_label = "Low Processing Time"
                 card_class = "pred-card-green"
-            elif prediction <= 120:
+            elif prediction <= 250:
                 risk_label = "Medium Processing Time"
                 card_class = "pred-card-yellow"
             else:
@@ -927,9 +927,9 @@ with tab4:
             results["Predicted_Build_Up_Time"] = np.round(predictions, 1)
 
             def classify_risk(val):
-                if val <= 150:
+                if val <= 200:
                     return "Low"
-                elif val <= 200:
+                elif val <= 250:
                     return "Medium"
                 return "High"
 
